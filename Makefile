@@ -1,4 +1,3 @@
-
 .PHONY: format lint config
 
 format:
@@ -12,13 +11,6 @@ lint:
 	xargs swift package plugin format-source-code --lint-only
 
 config:
-	@swift format dump-configuration | jq --slurpfile override swift-format.json '\
-	  def deepmerge(a; b): \
-	    reduce (b | keys_unsorted[]) as $$k \
-	      (a; \
-	       .[$$k] = if (a[$$k]|type)=="object" and (b[$$k]|type)=="object" \
-	                then deepmerge(a[$$k]; b[$$k]) \
-	                else b[$$k] \
-	                end); \
-	  deepmerge(.; $$override[0]) \
-	' > .swift-format
+	@swift format dump-configuration | \
+	jq --slurpfile override swift-format.json 'def deepmerge(a; b): reduce (b | keys_unsorted[]) as $$k (a; .[$$k] = if (a[$$k]|type)=="object" and (b[$$k]|type)=="object" then deepmerge(a[$$k]; b[$$k]) else b[$$k] end); deepmerge(.; $$override[0]) ' > \
+	.swift-format
