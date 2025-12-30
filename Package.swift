@@ -9,7 +9,11 @@ let package = Package(
     .plugin(
       name: "Format",
       targets: ["Format"]
-    )
+    ),
+    .plugin(
+      name: "Lint",
+      targets: ["Lint"]
+    ),
   ],
   targets: [
     .plugin(
@@ -20,6 +24,11 @@ let package = Package(
           .writeToPackageDirectory(reason: "This command formats the Swift source files")
         ]
       ),
-    )
+    ),
+
+    .plugin(
+      name: "Lint",
+      capability: .buildTool(),
+    ),
   ]
 )
