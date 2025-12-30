@@ -3,9 +3,10 @@ import PackagePlugin
 
 @main
 struct FormatPlugin {
-  func format(
+  func runSwiftFormat(
     executableURL: URL,
     arguments: [String],
+    lint: Bool,
     sourceFiles: [String],
     configurationFilePath: String?
   ) throws {
@@ -14,22 +15,28 @@ struct FormatPlugin {
       return
     }
 
-    var arguments =
-      arguments + [
-        "--parallel", "--in-place",
-      ]
+    var arguments = arguments
 
-    if let configurationFilePath = configurationFilePath {
-      arguments.append(contentsOf: ["--configuration", configurationFilePath])
+    arguments += [
+      lint ? "lint" : "format",
+      "--parallel",
+    ]
+
+    if !lint {
+      arguments += ["--in-place"]
     }
 
-    arguments.append(contentsOf: sourceFiles)
+    if let configurationFilePath = configurationFilePath {
+      arguments += ["--configuration", configurationFilePath]
+    }
+
+    arguments += sourceFiles
 
     let process = try Process.run(executableURL, arguments: arguments)
     process.waitUntilExit()
 
     if process.terminationReason == .exit && process.terminationStatus == 0 {
-      print("Formatted the source code.")
+      print("\(lint ? "Linted" : "Formatted") the source code.")
     } else {
       let problem = "\(process.terminationReason):\(process.terminationStatus)"
       Diagnostics.error("swift-format invocation failed: \(problem)")
@@ -56,9 +63,12 @@ extension FormatPlugin: CommandPlugin {
     let inputFiles = argExtractor.extractOption(named: "input-files")
     let exclusiveInputFiles = argExtractor.extractFlag(named: "input-files-only") > 0
 
-    try format(
+    let onlyLint = argExtractor.extractFlag(named: "lint-only") > 0
+
+    try runSwiftFormat(
       executableURL: context.tool(named: "swift").url,
       arguments: ["format"],
+      lint: onlyLint,
       sourceFiles: exclusiveInputFiles
         ? inputFiles : inputFiles + sourceCodeTargets.flatMap(\.sourceFiles.swiftSourceFiles),
       configurationFilePath: configurationFilePath
@@ -79,9 +89,12 @@ extension FormatPlugin: CommandPlugin {
         named: "swift-format-configuration"
       ).first
 
-      try format(
+      let onlyLint = argExtractor.extractFlag(named: "lint-only") > 0
+
+      try runSwiftFormat(
         executableURL: context.tool(named: "swift").url,
         arguments: ["format"],
+        lint: onlyLint,
         sourceFiles: context.xcodeProject.targets.flatMap(\.inputFiles.swiftSourceFiles),
         configurationFilePath: configurationFilePath
       )
