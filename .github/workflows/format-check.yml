@@ -1,0 +1,49 @@
+name: Format Check
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.2
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install tools on container
+        run: |
+          apt update
+          apt install -y make jq
+
+      - name: Run make config
+        run: make config
+
+      - name: Check for config changes
+        run: |
+          if ! git diff --exit-code .swift-format; then
+            echo "::error::Configuration file .swift-format has changes after 'make config'. Please run 'make config' and commit the changes."
+            exit 1
+          fi
+
+      - name: Run make format
+        run: make format
+
+      - name: Check for format changes
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::Code formatting changes detected. Please run 'make format' and commit the changes."
+            exit 1
+          fi
+
+      - name: Success
+        run: echo "✅ No formatting or configuration changes detected"
