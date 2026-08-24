@@ -20,6 +20,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
 
       - name: Configure git safe directory
@@ -72,7 +73,7 @@ jobs:
 
       - name: Push changes
         if: steps.check_config_changes.outputs.changed == 'true' || steps.check_format_changes.outputs.changed == 'true'
-        run: git push origin "HEAD:${GITHUB_REF_NAME}"
+        run: git push origin HEAD:${{ github.head_ref }}
 
       - name: Success
         run: echo "✅ No formatting or configuration changes detected"
