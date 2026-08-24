@@ -20,15 +20,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - name: Git settings
         shell: bash
         run: |
           # https://qiita.com/thaim/items/3d1a4d09ec4a7d8844ce
           git config --local user.name "github-actions[bot]"
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Configure git safe directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Install tools on container
         run: |
